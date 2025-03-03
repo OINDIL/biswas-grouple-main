@@ -4,7 +4,9 @@ import { FormGenerator } from "@/components/global/form-generator"
 import { Loader } from "@/components/global/loader"
 import { Button } from "@/components/ui/button"
 import { usePayments } from "@/hooks/payment"
+
 import { ErrorMessage } from "@hookform/error-message"
+import { CardElement } from "@stripe/react-stripe-js"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 
@@ -65,7 +67,20 @@ const PaymentForm = ({ affiliate, userId, stripeId }: Props) => {
           />
         </div>
         <div className="px-7 my-3">
-          <span>Create your own group</span>
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontSize: "16px",
+                  color: "#B4B0AE",
+                  "::placeholder": {
+                    color: "#B4B0AE",
+                  },
+                },
+              },
+            }}
+            className="bg-themeBlack border-[1px] border-themeGray outline-none rounded-lg p-3"
+          />
         </div>
         <div className="px-7 flex flex-col gap-5">
           <p className="text-sm text-themeTextGray">
@@ -84,7 +99,7 @@ const PaymentForm = ({ affiliate, userId, stripeId }: Props) => {
             type="submit"
             className="bg-themeBlack border-themeGray rounded-xl"
           >
-            <Loader loading={isPending}>Pay Rs. 99</Loader>
+            <Loader loading={isPending}>Pay</Loader>
           </Button>
         </div>
       </form>
