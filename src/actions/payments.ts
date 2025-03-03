@@ -1,5 +1,6 @@
 "use server"
 import { client } from "@/lib/prisma"
+import axios from "axios"
 import Stripe from "stripe"
 import { onAuthenticatedUser } from "./auth"
 
@@ -7,6 +8,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   typescript: true,
   apiVersion: "2024-06-20",
 })
+
+export const onGetRazorpayClientSecret = async () => {
+  try {
+    const response = await axios.post("/api/razorpay/order", { amount: 100 }) // Replace 500 with dynamic amount
+    return response.data
+  } catch (error) {
+    return { status: 400, message: "Failed to load form" }
+  }
+}
 
 export const onGetStripeClientSecret = async () => {
   try {
