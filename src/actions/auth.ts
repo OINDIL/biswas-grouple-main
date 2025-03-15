@@ -6,7 +6,12 @@ import { currentUser } from "@clerk/nextjs/server"
 export const onAuthenticatedUser = async () => {
   try {
     const clerk = await currentUser()
-    if (!clerk) return { status: 404 }
+    if (!clerk) {
+      return {
+        status: 401,
+        message: 'You must be signed in to use this feature'
+      }
+    }
 
     const user = await client.user.findUnique({
       where: {
@@ -28,12 +33,13 @@ export const onAuthenticatedUser = async () => {
       }
     return {
       status: 404,
+      message: "User not found in database"
     }
   } catch (error: any) {
     console.log(error.message)
-
     return {
       status: 400,
+      message: error.message || "Authentication failed"
     }
   }
 }

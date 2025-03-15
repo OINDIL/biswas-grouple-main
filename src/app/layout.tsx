@@ -1,3 +1,4 @@
+import { RazorpayProvider } from "@/components/global/razorpay/provider"
 import { ThemeProvider } from "@/components/theme"
 import { ReactQueryProvider } from "@/react-query/provider"
 import { ReduxProvider } from "@/redux/provider"
@@ -23,16 +24,18 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className={`${jakarta.className} bg-black`}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            disableTransitionOnChange
-          >
-            <ReduxProvider>
-              <ReactQueryProvider>{children}</ReactQueryProvider>
-            </ReduxProvider>
-            <Toaster />
-          </ThemeProvider>
+          <RazorpayProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              disableTransitionOnChange
+            >
+              <ReduxProvider>
+                <ReactQueryProvider>{children}</ReactQueryProvider>
+              </ReduxProvider>
+              <Toaster />
+            </ThemeProvider>
+          </RazorpayProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -1,13 +1,13 @@
 import { onAuthenticatedUser } from "@/actions/auth"
 import { onGetGroupInfo } from "@/actions/groups"
 import { onGetActiveSubscription } from "@/actions/payments"
+import GroupSideWidget from "@/components/global/group-side-widget"
 import {
   HydrationBoundary,
   QueryClient,
   dehydrate,
 } from "@tanstack/react-query"
 import AboutGroup from "../_components/about"
-import GroupSideWidget from "@/components/global/group-side-widget"
 
 type Props = {
   params: {

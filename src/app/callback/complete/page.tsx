@@ -1,3 +1,5 @@
+"use server"
+
 import { onSignUpUser } from "@/actions/auth"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
