@@ -3,16 +3,18 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { CheckCircle2Icon, CloudIcon } from "lucide-react"
-import { StripeConnect } from "../connect"
+import { RazorpayConnect } from "../connect/razorpay"
+import { StripeConnect } from "../connect/stripe"
 
 type Props = {
-  name: "stripe"
+  name: "stripe" | "razorpay"
   logo: string
   title: string
   descrioption: string
   groupid: string
   connections: {
-    [key in "stripe"]: boolean
+    stripe: boolean
+    razorpay: boolean
   }
 }
 
@@ -24,6 +26,17 @@ const IntegrationTrigger = ({
   connections,
   groupid,
 }: Props) => {
+  const renderConnectButton = () => {
+    switch (name) {
+      case "stripe":
+        return <StripeConnect connected={connections.stripe} groupid={groupid} />;
+      case "razorpay":
+        return <RazorpayConnect connected={connections.razorpay} groupid={groupid} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <SimpleModal
       title={title}
@@ -39,7 +52,7 @@ const IntegrationTrigger = ({
     >
       <Separator orientation="horizontal" />
       <div className="flex flex-col gap-2">
-        <h2 className="font-bold">Stripe would like to access</h2>
+        <h2 className="font-bold">{name === "stripe" ? "Stripe" : "Razorpay"} would like to access</h2>
         {[
           "Payment and bank information",
           "Products and services you sell",
@@ -58,7 +71,7 @@ const IntegrationTrigger = ({
           >
             Learn more
           </Button>
-          <StripeConnect connected={connections["stripe"]} groupid={groupid} />
+          {renderConnectButton()}
         </div>
       </div>
     </SimpleModal>

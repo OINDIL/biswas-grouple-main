@@ -1,8 +1,7 @@
-import { onGetStripeIntegration } from "@/actions/payments"
+import { onGetRazorpayIntegration, onGetStripeIntegration } from "@/actions/payments"
+import { FallbackImage } from "@/components/global/fallback-image"
 import { Card, CardContent, CardDescription } from "@/components/ui/card"
 import { INTEGRATION_LIST_ITEMS } from "@/constants/menus"
-
-import Image from "next/image"
 import IntegrationTrigger from "./_components/integration-trigger"
 
 const IntegrationsPage = async ({
@@ -10,10 +9,25 @@ const IntegrationsPage = async ({
 }: {
   params: { groupid: string }
 }) => {
-  const payment = await onGetStripeIntegration()
+  const stripePayment = await onGetStripeIntegration()
+  const razorpayPayment = await onGetRazorpayIntegration()
+  
   const connections = {
-    stripe: payment ? true : false,
+    stripe: stripePayment?.status === 200,
+    razorpay: razorpayPayment?.status === 200
   }
+
+  const getImagePath = (name: string): string => {
+    switch (name) {
+      case "stripe":
+        return "/stripe.png"
+      case "razorpay":
+        return "/razorpay.png"
+      default:
+        return "/vercel.svg"
+    }
+  }
+
   return (
     <div className="flex-1 h-0 grid grid-cols-1 p-5 content-start lg:grid-cols-3 xl:grid-cols-4 gap-3">
       {INTEGRATION_LIST_ITEMS.map((item) => (
@@ -22,11 +36,12 @@ const IntegrationsPage = async ({
             <div className="flex w-full justify-between items-start gap-x-20">
               <div className="">
                 <div className="w-10 h-10 relative">
-                  <Image
-                    src={`/stripe.png`}
-                    alt="Logo"
-                    width={60}
-                    height={60}
+                  <FallbackImage
+                    src={getImagePath(item.name)}
+                    alt={`${item.name} Logo`}
+                    width={40}
+                    height={40}
+                    priority
                   />
                 </div>
                 <h2 className="font-bold capitalize">{item.name}</h2>
@@ -35,8 +50,8 @@ const IntegrationsPage = async ({
                 connections={connections}
                 title={item.title}
                 descrioption={item.modalDescription}
-                logo={item.logo}
-                name={item.name}
+                logo={getImagePath(item.name)}
+                name={item.name as "stripe" | "razorpay"}
                 groupid={params.groupid}
               />
             </div>

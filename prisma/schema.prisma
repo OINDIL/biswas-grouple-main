@@ -9,8 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -22,6 +22,7 @@ model User {
   clerkId   String   @unique
   image     String?
   stripeId  String?
+  razorpayId String?
 
   group      Group[]
   membership Members[]
