@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
-    "prepare": "husky",
-    "test": "echo \"No tests specified\" && exit 0"
+    "prepare": "husky"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.3.2",
