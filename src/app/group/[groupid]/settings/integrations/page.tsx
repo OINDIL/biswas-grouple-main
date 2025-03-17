@@ -20,9 +20,9 @@ const IntegrationsPage = async ({
   const getImagePath = (name: string): string => {
     switch (name) {
       case "stripe":
-        return "/stripe.png"
+        return "/stripe.jpg"
       case "razorpay":
-        return "/razorpay.png"
+        return "/razorpay.svg"
       default:
         return "/vercel.svg"
     }
@@ -35,7 +35,7 @@ const IntegrationsPage = async ({
           <CardContent className="flex flex-col p-5 gap-2">
             <div className="flex w-full justify-between items-start gap-x-20">
               <div className="">
-                <div className="w-10 h-10 relative">
+                <div className="w-10 h-10 relative rounded-full overflow-hidden">
                   <FallbackImage
                     src={getImagePath(item.name)}
                     alt={`${item.name} Logo`}

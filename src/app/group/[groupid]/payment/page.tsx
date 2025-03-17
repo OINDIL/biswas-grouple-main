@@ -27,6 +27,7 @@ export default function GroupPaymentPage({ params }: Props) {
             userId=""
             affiliate={false}
             stripeId=""
+            amount={99}
           />
         </div>
       </StripeElements>

@@ -1,20 +1,20 @@
 import { onAuthenticatedUser } from "@/actions/auth"
 import {
-    onGetAllGroupMembers,
-    onGetGroupChannels,
-    onGetGroupInfo,
-    onGetGroupSubscriptions,
-    onGetUserGroups,
+  onGetAllGroupMembers,
+  onGetGroupChannels,
+  onGetGroupInfo,
+  onGetGroupSubscriptions,
+  onGetUserGroups,
 } from "@/actions/groups"
 import SideBar from "@/components/global/sidebar"
 import {
-    HydrationBoundary,
-    QueryClient,
-    dehydrate,
+  HydrationBoundary,
+  QueryClient,
+  dehydrate,
 } from "@tanstack/react-query"
 import { redirect } from "next/navigation"
 import MobileNav from "../_components/mobile-nav"
-import { Navbar } from "../_components/navbar"
+import GroupNavbar from "./_components/group-navbar"
 
 type Props = {
   children: React.ReactNode
@@ -29,7 +29,7 @@ const GroupLayout = async ({ children, params }: Props) => {
   const user = await onAuthenticatedUser()
   if (!user.id) redirect("/sign-in")
 
-  const groupId = params.groupid
+  const groupId : string = params.groupid
 
   //group info
   await query.prefetchQuery({
@@ -81,7 +81,9 @@ const GroupLayout = async ({ children, params }: Props) => {
       <div className="flex h-screen md:pt-5">
         <SideBar groupid={groupId} userid={user.id} />
         <div className="md:ml-[300px] flex flex-col flex-1 bg-[#101011] md:rounded-tl-xl overflow-y-auto border-l-[1px] border-t-[1px] border-[#28282D]">
-          <Navbar groupid={groupId} userid={user.id} />
+          {/* <Navbar groupid={groupId} userid={user.id} /> */}
+          {/* @ts-ignore */}
+          <GroupNavbar groupid={groupId} userid={user.id} />
           {children}
           <MobileNav groupid={groupId} />
         </div>

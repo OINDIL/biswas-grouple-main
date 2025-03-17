@@ -7,10 +7,12 @@ import { useRazorpayPayment } from "@/hooks/payment"
 
 type Props = {
   groupId: string
+  amount: number
 }
 
-export default function RazorpayForm({ groupId }: Props) {
-  const { onPayWithRazorpay, isPending } = useRazorpayPayment(groupId)
+export default function RazorpayForm({ groupId, amount }: Props) {
+  console.log(groupId, amount)
+  const { onPayWithRazorpay, isPending } = useRazorpayPayment(groupId, amount)
 
   return (
     <div className="space-y-4">

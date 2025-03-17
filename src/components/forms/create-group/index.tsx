@@ -15,12 +15,13 @@ type Props = {
   userId: string
   affiliate: boolean
   stripeId?: string
+  amount: number
 }
 
-const CreateGroup = ({ userId, affiliate, stripeId }: Props) => {
+const CreateGroup = ({ userId, affiliate, stripeId , amount}: Props) => {
   const [groupId, setGroupId] = useState<string>("")
   const [showPayment, setShowPayment] = useState(false)
-  
+  console.log(amount)
   const {
     register,
     handleSubmit,
@@ -53,6 +54,7 @@ const CreateGroup = ({ userId, affiliate, stripeId }: Props) => {
           affiliate={affiliate} 
           stripeId={stripeId} 
           groupId={groupId} 
+          amount={amount}
         />
       </StripeElements>
     )

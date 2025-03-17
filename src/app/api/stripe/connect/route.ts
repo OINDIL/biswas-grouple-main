@@ -1,52 +1,77 @@
-import { onAuthenticatedUser } from "@/actions/auth"
-import { client } from "@/lib/prisma"
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  typescript: true,
-  apiVersion: "2024-06-20",
+  apiVersion: "2024-06-20"
 })
 
-export async function GET(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const searchParams = req.nextUrl.searchParams
-    const groupid = searchParams.get("groupid")
+    const { groupId, returnUrl, refreshUrl } = await req.json()
 
-    const account = await stripe.accounts.create({
-      type: "standard",
-      country: "US",
-      business_type: "individual",
-    })
+    if (!groupId) {
+      return NextResponse.json(
+        { error: "Group ID is required" },
+        { status: 400 }
+      )
+    }
 
-    if (account) {
-      console.log(account)
-      const user = await onAuthenticatedUser()
-      const integrateStripeAccount = await client.user.update({
-        where: {
-          id: user.id,
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json(
+        { error: "Stripe secret key is not configured" },
+        { status: 500 }
+      )
+    }
+
+    try {
+      const account = await stripe.accounts.create({
+        type: "express",
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true }
         },
-        data: {
-          stripeId: account.id,
-        },
+        business_type: "individual",
+        settings: {
+          payouts: {
+            schedule: {
+              interval: "manual"
+            }
+          }
+        }
       })
 
-      if (integrateStripeAccount) {
-        const accountLink = await stripe.accountLinks.create({
-          account: account.id,
-          refresh_url: `http://localhost:3000/callback/stripe/refresh`,
-          return_url: `http://localhost:3000/group/${groupid}/settings/integrations`,
-          type: "account_onboarding",
-        })
-        console.log(accountLink)
+      const accountLink = await stripe.accountLinks.create({
+        account: account.id,
+        refresh_url: refreshUrl,
+        return_url: returnUrl,
+        type: "account_onboarding"
+      })
+
+      return NextResponse.json({
+        url: accountLink.url,
+        accountId: account.id
+      })
+    } catch (error: any) {
+      if (error.code === 'parameter_missing' && error.param === 'account') {
         return NextResponse.json({
-          url: accountLink.url,
+          needsConnectSetup: true,
+          dashboardUrl: "https://dashboard.stripe.com/settings/connect"
         })
       }
+      throw error
     }
-  } catch (error) {
-    return new NextResponse(
-      "An error occurred when calling the Stripe API to create an account:",
+  } catch (error: any) {
+    console.error("Stripe Connect Error:", error)
+    
+    // More detailed error response
+    return NextResponse.json(
+      { 
+        error: "Failed to create Stripe Connect URL",
+        details: error.message,
+        code: error.code,
+        type: error.type
+      },
+      { status: 500 }
     )
   }
 }
