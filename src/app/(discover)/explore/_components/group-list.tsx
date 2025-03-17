@@ -14,7 +14,7 @@ const GroupList = ({ category }: Props) => {
   return (
     <div className="container grid md:grid-cols-2 grid-cols-1 lg:grid-cols-3 gap-6 mt-16">
       {status === 200 ? (
-        groups.map((group) => <GroupCard key={group.id} {...group} />)
+        groups.map((group, index) => <GroupCard key={index} {...group} />)
       ) : (
         <NoResult />
       )}

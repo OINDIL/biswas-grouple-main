@@ -18,7 +18,7 @@ type Props = {
   amount: number
 }
 
-const CreateGroup = ({ userId, affiliate, stripeId , amount}: Props) => {
+const CreateGroup = ({ userId, affiliate, stripeId, amount }: Props) => {
   const [groupId, setGroupId] = useState<string>("")
   const [showPayment, setShowPayment] = useState(false)
   console.log(amount)
@@ -49,11 +49,11 @@ const CreateGroup = ({ userId, affiliate, stripeId , amount}: Props) => {
   if (showPayment) {
     return (
       <StripeElements>
-        <PaymentForm 
-          userId={userId} 
-          affiliate={affiliate} 
-          stripeId={stripeId} 
-          groupId={groupId} 
+        <PaymentForm
+          userId={userId}
+          affiliate={affiliate}
+          stripeId={stripeId}
+          groupId={groupId}
           amount={amount}
         />
       </StripeElements>
@@ -68,7 +68,7 @@ const CreateGroup = ({ userId, affiliate, stripeId , amount}: Props) => {
         label="Select Category"
         slidesOffsetBefore={28}
       />
-      <div className="space-y-4">
+      <div className="space-y-4 px-6">
         <FormGenerator
           register={register}
           name="name"

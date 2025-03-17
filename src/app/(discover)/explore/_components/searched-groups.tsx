@@ -16,7 +16,7 @@ export const SearchGroups = ({ data, searching, query }: Props) => {
     <div className="container grid md:grid-cols-2 grid-cols-1 lg:grid-cols-3 gap-6 mt-36">
       <Loader loading={searching} className="lg:col-span-3 md:col-span-2">
         {data.length > 0 ? (
-          data.map((group: any) => <GroupCard key={group.id} {...group} />)
+          data.map((group: any, index) => <GroupCard key={index} {...group} />)
         ) : (
           <NoResult />
         )}

@@ -54,9 +54,9 @@ export const GroupDropDown = ({ groups, members }: GroupDropDownProps) => {
     >
       {userGroups &&
         userGroups.length > 0 &&
-        userGroups.map((item) => (
+        userGroups.map((item, _i) => (
           <Link
-            key={item.id}
+            key={_i}
             href={`/group/${item.id}/channel/${item.channel[0].id}`}
           >
             <Button
@@ -71,9 +71,9 @@ export const GroupDropDown = ({ groups, members }: GroupDropDownProps) => {
       <Separator orientation="horizontal" />
       {members &&
         members.length > 0 &&
-        members.map((member) => (
+        members.map((member, _i) => (
           <Link
-            key={member.Group?.id}
+            key={_i}
             href={`/group/${member.Group?.id}/channel/${member.Group?.channel[0].id}`}
           >
             <Button

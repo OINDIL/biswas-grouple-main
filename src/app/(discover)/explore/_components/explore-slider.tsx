@@ -1,9 +1,9 @@
+import Skeleton from "@/components/global/skeleton"
 import { Slider } from "@/components/global/slider"
 import { useExploreSlider, useGroupList } from "@/hooks/groups"
 import { useAppSelector } from "@/redux/store"
 import { SwiperSlide } from "swiper/react"
 import GroupCard from "./group-card"
-import Skeleton from "@/components/global/skeleton"
 
 type Props = {
   query: string
@@ -65,14 +65,14 @@ const ExploreSlider = ({ label, query, text }: Props) => {
             },
           }}
         >
-          {groups.map((group) => (
-            <SwiperSlide key={group.id}>
+          {groups.map((group, _i) => (
+            <SwiperSlide key={_i}>
               <GroupCard {...group} />
             </SwiperSlide>
           ))}
           {fetchedData?.status === 200 &&
-            data.map((group: any) => (
-              <SwiperSlide key={group.id}>
+            data.map((group: any, _i) => (
+              <SwiperSlide key={_i}>
                 <GroupCard {...group} />
               </SwiperSlide>
             ))}

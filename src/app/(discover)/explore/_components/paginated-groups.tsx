@@ -6,7 +6,7 @@ type Props = {}
 const PaginatedGroups = (props: Props) => {
   const { data } = useAppSelector((state) => state.infiniteScrollReducer)
 
-  return data.map((data: any) => <GroupCard key={data.id} {...data} />)
+  return data.map((data: any, index) => <GroupCard key={index} {...data} />)
 }
 
 export default PaginatedGroups

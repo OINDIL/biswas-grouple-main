@@ -17,7 +17,7 @@ const Menu = ({ orientation }: MenuProps) => {
       return (
         <Card className="bg-themeGray border-themeGray bg-clip-padding backdrop--blur__safari backdrop-filter backdrop-blur-2xl bg-opacity-60 p-1 lg:flex hidden rounded-xl">
           <CardContent className="p-0 flex gap-2">
-            {GROUPLE_CONSTANTS.landingPageMenu.map((menuItem) => (
+            {GROUPLE_CONSTANTS.landingPageMenu.map((menuItem, _i) => (
               <Link
                 href={menuItem.path}
                 {...(menuItem.section && {
@@ -29,7 +29,7 @@ const Menu = ({ orientation }: MenuProps) => {
                     ? "bg-[#09090B] border-[#27272A]"
                     : "",
                 )}
-                key={menuItem.id}
+                key={_i}
               >
                 {section == menuItem.path && menuItem.icon}
                 {menuItem.label}
@@ -42,7 +42,7 @@ const Menu = ({ orientation }: MenuProps) => {
     case "mobile":
       return (
         <div className="flex flex-col mt-10">
-          {GROUPLE_CONSTANTS.landingPageMenu.map((menuItem) => (
+          {GROUPLE_CONSTANTS.landingPageMenu.map((menuItem, index) => (
             <Link
               href={menuItem.path}
               {...(menuItem.section && {
@@ -52,7 +52,7 @@ const Menu = ({ orientation }: MenuProps) => {
                 "rounded-xl flex gap-2 py-2 px-4 items-center",
                 section == menuItem.path ? "bg-themeGray border-[#27272A]" : "",
               )}
-              key={menuItem.id}
+              key={index}
             >
               {menuItem.icon}
               {menuItem.label}
