@@ -11,7 +11,7 @@ import {
   IDuotoneBlack,
   PersonalDevelopment,
   ZapDouToneBlack,
-} from "@/icons"
+} from "../icons"
 
 export type MenuProps = {
   id: number
@@ -128,7 +128,7 @@ export const SIDEBAR_SETTINGS_MENU: MenuProps[] = [
 
 type IntegrationsListItemProps = {
   id: string
-  name: "stripe"
+  name: "stripe" | "razorpay"
   logo: string
   description: string
   title: string
@@ -143,6 +143,16 @@ export const INTEGRATION_LIST_ITEMS: IntegrationsListItemProps[] = [
       "Stripe is the fastest and easiest way to integrate payments and financial services into your software platform or marketplace.",
     logo: "914be637-39bf-47e6-bb81-37b553163945",
     title: "Connect Stripe Account",
+    modalDescription:
+      "The world’s most successful platforms and marketplaces including Shopify and DoorDash, use Stripe Connect.",
+  },
+  {
+    id: "2",
+    name: "razorpay",
+    description:
+    "Razorpay is a payment gateway that allows you to accept payments from your customers.",
+    logo: "/razorpay.svg",
+    title: "Connect Razorpay Account",
     modalDescription:
       "The world’s most successful platforms and marketplaces including Shopify and DoorDash, use Stripe Connect.",
   },

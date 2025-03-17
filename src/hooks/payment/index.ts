@@ -1,18 +1,17 @@
 "use client"
 import {
-    onCreateNewGroup,
-    onGetGroupChannels,
-    onGetGroupSubscriptions,
-    onJoinGroup,
+  onCreateNewGroup,
+  onGetGroupChannels,
+  onGetGroupSubscriptions,
+  onJoinGroup,
 } from "@/actions/groups"
 import {
-    onActivateSubscription,
-    onCreateNewGroupSubscription,
-    onGetActiveSubscription,
-    onGetStripeClientSecret,
-    onGetSubscriptionPaymentIntent,
-    onTransferCommission,
-    onVerifyRazorpayPayment
+  onActivateSubscription,
+  onCreateNewGroupSubscription,
+  onGetActiveSubscription,
+  onGetStripeClientSecret,
+  onTransferCommission,
+  onVerifyRazorpayPayment
 } from "@/actions/payments"
 import { CreateGroupSchema } from "@/components/forms/create-group/schema"
 import { CreateGroupSubscriptionSchema } from "@/components/forms/subscription/schema"
@@ -75,30 +74,6 @@ interface RazorpayErrorResponse extends BaseResponse {
 type StripeResponse = StripeSuccessResponse | StripeErrorResponse;
 type RazorpayResponse = RazorpaySuccessResponse | RazorpayErrorResponse;
 
-const isStripeSuccess = (response: unknown): response is StripeSuccessResponse => {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    'status' in response &&
-    (response as any).status === 200 &&
-    'secret' in response &&
-    typeof (response as any).secret === 'string' &&
-    'paymentIntentId' in response &&
-    typeof (response as any).paymentIntentId === 'string'
-  );
-};
-
-const isRazorpaySuccess = (response: unknown): response is RazorpaySuccessResponse => {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    'status' in response &&
-    (response as any).status === 200 &&
-    'orderId' in response &&
-    'amount' in response &&
-    'currency' in response
-  );
-};
 
 export const usePayments = (
   userId: string,
@@ -241,22 +216,13 @@ export const usePaymentMethod = (groupId: string) => {
   };
 };
 
-export const useRazorpayPayment = (groupId: string) => {
+export const useRazorpayPayment = (groupId: string, amount: number, currency: string = 'INR') => {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [rzpInstance, setRzpInstance] = useState<any>(null);
 
-  const { data: Intent, isLoading: isLoadingIntent } = useQuery({
-    queryKey: ["group-payment-intent", groupId, "razorpay"],
-    queryFn: async () => {
-      const response = await onGetSubscriptionPaymentIntent(groupId, "razorpay");
-      return response;
-    },
-    enabled: !!groupId && !isProcessing,
-    staleTime: 30000, // Cache for 30 seconds
-    retry: 1
-  });
   const { mutate, isPending } = useMutation<string>({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<string> => {
       try {
         if (isProcessing) {
           throw new Error("Payment is already in progress");
@@ -268,26 +234,31 @@ export const useRazorpayPayment = (groupId: string) => {
           throw new Error("Razorpay not initialized");
         }
 
-        if (!Intent) {
-          throw new Error("Could not create payment session");
-        }
-
-        if (!isRazorpaySuccess(Intent)) {
-          throw new Error(Intent.message || "Invalid payment session");
-        }
-
         if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
           throw new Error("Razorpay key not configured");
         }
 
+        // Create a new payment order
+        const createOrderResponse = await axios.post('/api/razorpay/order', {
+          groupId,
+          amount,
+          currency
+        });
+
+        if (!createOrderResponse.data?.id) {
+          throw new Error("Failed to create payment order");
+        }
+
+        const order = createOrderResponse.data;
+
         return new Promise((resolve, reject) => {
           const options = {
             key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-            amount: Intent.amount,
-            currency: Intent.currency,
+            amount: order.amount,
+            currency: order.currency,
             name: "Biswas Grouple",
-            description: "Group Subscription Payment",
-            order_id: Intent.orderId,
+            description: "New Group Creation Payment",
+            order_id: order.id,
             handler: async function (response: any) {
               try {
                 const result = await onVerifyRazorpayPayment(
@@ -337,13 +308,22 @@ export const useRazorpayPayment = (groupId: string) => {
           };
 
           const rzp = new window.Razorpay(options);
+          setRzpInstance(rzp);
+          
           rzp.on('payment.failed', (response: any) => {
             reject(new Error(response.error.description || "Payment failed"));
           });
           rzp.open();
         });
-      } catch (error) {
+      } catch (error:any) {
         console.error("Payment processing error:", error);
+
+        if (error.response) {
+          // Log detailed error information
+          console.error("Error response data:", error.response.data);
+          console.error("Error status:", error.response.status);
+          console.error("Error headers:", error.response.headers);
+        }
         throw error;
       } finally {
         setIsProcessing(false);
@@ -358,6 +338,15 @@ export const useRazorpayPayment = (groupId: string) => {
     },
   });
 
+  // Cleanup Razorpay instance
+  useEffect(() => {
+    return () => {
+      if (rzpInstance) {
+        rzpInstance.close();
+      }
+    };
+  }, [rzpInstance]);
+
   const onPayWithRazorpay = useCallback(() => {
     if (isProcessing) {
       toast.error("Payment is already in progress");
@@ -368,25 +357,17 @@ export const useRazorpayPayment = (groupId: string) => {
 
   return { 
     onPayWithRazorpay, 
-    isPending: isPending || isLoadingIntent || isProcessing,
+    isPending: isPending || isProcessing,
     isProcessing 
   };
 };
 
-export const useJoinGroup = (groupId: string) => {
+export const useJoinGroup = (groupId: string, amount: number) => {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { data: Intent, error: intentError } = useQuery({
-    queryKey: ["group-payment-intent", groupId, "stripe"],
-    queryFn: () => onGetSubscriptionPaymentIntent(groupId, "stripe"),
-    staleTime: 30000,
-    retry: 1,
-    enabled: !!groupId && !isProcessing
-  });
   const { mutate, isPending } = useMutation<string>({
     mutationFn: async (): Promise<string> => {
       try {
@@ -399,26 +380,38 @@ export const useJoinGroup = (groupId: string) => {
         if (!stripe || !elements) {
           throw new Error("Payment system not initialized");
         }
-
-        if (!Intent) {
-          throw new Error("Could not create payment session");
+        // Validate amount
+        if (!amount || typeof amount !== "number" || amount <= 0) {
+          throw new Error(`Invalid amount specified: ${amount}. Please provide a positive number.`);
         }
 
-        const stripeResponse = Intent as StripeResponse;
-        if (!isStripeSuccess(stripeResponse)) {
-          throw new Error(stripeResponse.message || "Invalid payment session");
+        // Convert amount to cents
+        const amountInCents = Math.round(amount * 100);
+
+        // Create a new payment intent
+        const createIntentResponse = await axios.post('/api/stripe/create-payment-intent', {
+          groupId,
+          amount: amountInCents,
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!createIntentResponse.data?.clientSecret) {
+          throw new Error("Failed to create payment intent");
         }
+
+        const { clientSecret } = createIntentResponse.data;
 
         const cardElement = elements.getElement(CardElement);
         if (!cardElement) {
           throw new Error("Card element not found");
         }
 
-        setPaymentIntentId(stripeResponse.paymentIntentId);
-
-        // First confirm the card payment
+        // Confirm the card payment
         const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
-          stripeResponse.secret,
+          clientSecret,
           {
             payment_method: {
               card: cardElement,
@@ -434,25 +427,25 @@ export const useJoinGroup = (groupId: string) => {
           throw new Error(confirmError.message || "Payment failed");
         }
 
-        // Handle requires_action status - this will redirect to Stripe
+        // Handle requires_action status
         if (paymentIntent?.status === "requires_action") {
           const { error: actionError, paymentIntent: updatedIntent } = await stripe.handleCardAction(
-            stripeResponse.secret
+            clientSecret
           );
 
           if (actionError) {
             throw new Error(actionError.message || "Payment authentication failed");
           }
           
-          // This will redirect to Stripe's page, so we don't proceed further
           return updatedIntent?.id || "";
         }
 
         // Only proceed if payment is successful
-        if (paymentIntent.status !== "succeeded") {
-          throw new Error(`Payment unsuccessful: ${paymentIntent.status}`);
+        if (paymentIntent?.status !== "succeeded") {
+          throw new Error(`Payment unsuccessful: ${paymentIntent?.status}`);
         }
 
+        // Join the group after successful payment
         const member = await onJoinGroup(groupId);
         if (!member || member.status !== 200) {
           throw new Error("Failed to join group");
@@ -464,8 +457,13 @@ export const useJoinGroup = (groupId: string) => {
         }
 
         return channels.channels[0].id;
-      } catch (error) {
+      } catch (error: any) {
         console.error("Payment processing error:", error);
+        if (error.response) {
+          console.error("Error response data:", error.response.data);
+          console.error("Error status:", error.response.status);
+          console.error("Error headers:", error.response.headers);
+        }
         throw error;
       } finally {
         setIsProcessing(false);
@@ -492,8 +490,7 @@ export const useJoinGroup = (groupId: string) => {
   return {
     onPayToJoin,
     isPending: isPending || isProcessing,
-    isProcessing,
-    error: intentError
+    isProcessing
   };
 };
 
@@ -556,25 +553,54 @@ export const useAllSubscriptions = (groupid: string) => {
 }
 
 export const useStripeConnect = (groupid: string) => {
-  const [onStripeAccountPending, setOnStripeAccountPending] =
-    useState<boolean>(false)
+  const [isConnecting, setIsConnecting] = useState(false);
 
-  const onStripeConnect = async () => {
+  const onStripeConnect = useCallback(async () => {
     try {
-      setOnStripeAccountPending(true)
-      const account = await axios.get(`/api/stripe/connect?groupid=${groupid}`)
-      if (account) {
-        setOnStripeAccountPending(false)
-        if (account) {
-          window.location.href = account.data.url
+      setIsConnecting(true);
+      
+      const response = await axios.post('/api/stripe/connect', {
+        groupId: groupid,
+        returnUrl: window.location.href,
+        refreshUrl: window.location.href
+      });
+
+      if (response.data?.needsConnectSetup) {
+        const shouldProceed = window.confirm(
+          "You need to enable Stripe Connect first. Would you like to be redirected to the Stripe Dashboard to complete the setup?"
+        );
+        
+        if (shouldProceed) {
+          window.location.href = response.data.dashboardUrl;
+        }
+        return;
+      }
+
+      if (!response.data?.url) {
+        throw new Error("Failed to create Stripe Connect URL");
+      }
+
+      // Redirect to Stripe Connect
+      window.location.href = response.data.url;
+    } catch (error: any) {
+      console.error("Stripe Connect Error:", error);
+      
+      let errorMessage = "Failed to connect to Stripe";
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+        if (error.response.data.details) {
+          errorMessage += `: ${error.response.data.details}`;
         }
       }
-    } catch (error) {
-      console.log(error)
+      toast.error(errorMessage);
+      toast.error("Please complete the setup ");
+    } finally {
+      setIsConnecting(false);
     }
-  }
-  return { onStripeConnect, onStripeAccountPending }
-}
+  }, [groupid]);
+
+  return { onStripeConnect, isConnecting };
+};
 
 export const useRazorpayConnect = (groupId: string) => {
   const [isConnecting, setIsConnecting] = useState(false);

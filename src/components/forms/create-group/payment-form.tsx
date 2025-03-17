@@ -3,7 +3,7 @@
 import { Loader } from "@/components/global/loader"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useJoinGroup, usePaymentMethod } from "@/hooks/payment"
+import { useJoinGroup, usePaymentMethod } from "@/hooks/payment/index"
 import { CardElement } from "@stripe/react-stripe-js"
 import { memo, useCallback, useState } from "react"
 import PaymentMethodSelector from "./payment-method-selector"
@@ -14,6 +14,7 @@ type Props = {
   affiliate: boolean
   stripeId?: string
   groupId: string
+  amount: number
 }
 
 const cardElementOptions = {
@@ -60,9 +61,11 @@ const StripePaymentForm = memo(({ onPayWithStripe, isStripeLoading, onCardChange
   </div>
 ));
 
-const PaymentForm = ({ userId, affiliate, stripeId, groupId }: Props) => {
+const PaymentForm = ({ userId, affiliate, stripeId, groupId, amount }: Props) => {
   const { paymentMethod } = usePaymentMethod(groupId)
-  const { onPayToJoin: onPayWithStripe, isPending: isStripeLoading } = useJoinGroup(groupId)
+  const { onPayToJoin: onPayWithStripe, isPending: isStripeLoading } = useJoinGroup(groupId, amount)
+  
+
   const [cardError, setCardError] = useState<string | null>(null)
 
   const handleCardChange = useCallback((event: any) => {
@@ -98,7 +101,7 @@ const PaymentForm = ({ userId, affiliate, stripeId, groupId }: Props) => {
               onCardChange={handleCardChange}
             />
           ) : (
-            <RazorpayForm groupId={groupId} />
+            <RazorpayForm groupId={groupId} amount={amount} />
           )}
         </CardContent>
       </Card>

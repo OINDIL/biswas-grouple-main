@@ -47,6 +47,7 @@ const GroupCreatePage = async ({
         userId={user?.id ?? ""}
         affiliate={affiliate.status === 200}
         stripeId={affiliate.user?.Group?.User?.stripeId ?? ""}
+        amount={99}
       />
     </>
   )

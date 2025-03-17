@@ -1,13 +1,19 @@
-import { NextResponse } from "next/server"
-import Razorpay from "razorpay"
+import { validateGroupId } from "@/lib/validations"; // You'll need to create this
+import { NextResponse } from "next/server";
+import Razorpay from "razorpay";
 
 export async function POST(req: Request) {
   try {
-    const { amount } = await req.json()
+    const { amount, groupId } = await req.json()
+    console.log(amount, groupId)
 
-    // Validate amount
+    // Validate inputs
     if (!amount || typeof amount !== "number" || amount <= 0) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 })
+    }
+
+    if (!validateGroupId(groupId)) {
+      return NextResponse.json({ error: "Invalid group ID" }, { status: 400 })
     }
 
     // Ensure environment variables exist
@@ -23,12 +29,19 @@ export async function POST(req: Request) {
       amount: amount * 100, // Convert INR to paise
       currency: "INR",
       receipt: `order_rcptid_${Date.now()}`,
+      notes: {
+        groupId: groupId
+      }
     }
 
     const order = await razorpay.orders.create(options)
+    
+    // Log successful order creation
+    console.log(`Order created for group ${groupId}: ${order.id}`)
 
-    return NextResponse.json(order) // Send order to frontend
+    return NextResponse.json(order)
   } catch (error: any) {
+    console.error("Order creation error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

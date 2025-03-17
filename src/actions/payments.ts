@@ -369,14 +369,47 @@ export const onGetStripeIntegration = async () => {
       };
     }
 
-    const stripeId = await client.user.findUnique({
+    const user = await client.user.findUnique({
       where: { id: authResponse.id },
       select: { stripeId: true },
     });
 
-    return stripeId?.stripeId 
-      ? { status: 200, stripeId: stripeId.stripeId }
-      : { status: 404, message: "No Stripe integration found" };
+    if (!user) {
+      return { 
+        status: 404, 
+        message: "User not found" 
+      };
+    }
+
+    if (!user.stripeId) {
+      return { 
+        status: 404, 
+        message: "No Stripe integration found" 
+      };
+    }
+
+    // Verify the Stripe account is still valid
+    try {
+      const account = await stripe.accounts.retrieve(user.stripeId);
+      if (!account || account.details_submitted === false) {
+        return { 
+          status: 400, 
+          message: "Stripe account not fully set up" 
+        };
+      }
+
+      return { 
+        status: 200, 
+        stripeId: user.stripeId,
+        accountStatus: account.details_submitted ? "active" : "incomplete"
+      };
+    } catch (error) {
+      console.error("Stripe account verification error:", error);
+      return { 
+        status: 400, 
+        message: "Failed to verify Stripe account" 
+      };
+    }
   } catch (error) {
     console.error("Stripe Integration Error:", error);
     return { 
