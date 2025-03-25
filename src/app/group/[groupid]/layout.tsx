@@ -29,13 +29,13 @@ const GroupLayout = async ({ children, params }: Props) => {
   const user = await onAuthenticatedUser()
   if (!user.id) redirect("/sign-in")
 
-  const groupId : string = params.groupid
+  const { groupid } = await params
 
   //group info
   await query.prefetchQuery({
     queryKey: ["group-info"],
     queryFn: async () => {
-      const result = await onGetGroupInfo(groupId)
+      const result = await onGetGroupInfo(groupid)
       return result || { status: 404 }
     },
   })
@@ -53,7 +53,7 @@ const GroupLayout = async ({ children, params }: Props) => {
   await query.prefetchQuery({
     queryKey: ["group-channels"],
     queryFn: async () => {
-      const result = await onGetGroupChannels(groupId)
+      const result = await onGetGroupChannels(groupid)
       return result || { status: 404, channels: [] }
     },
   })
@@ -62,7 +62,7 @@ const GroupLayout = async ({ children, params }: Props) => {
   await query.prefetchQuery({
     queryKey: ["group-subscriptions"],
     queryFn: async () => {
-      const result = await onGetGroupSubscriptions(groupId)
+      const result = await onGetGroupSubscriptions(groupid)
       return result || { status: 404, subscriptions: [], count: 0 }
     },
   })
@@ -71,7 +71,7 @@ const GroupLayout = async ({ children, params }: Props) => {
   await query.prefetchQuery({
     queryKey: ["member-chats"],
     queryFn: async () => {
-      const result = await onGetAllGroupMembers(groupId)
+      const result = await onGetAllGroupMembers(groupid)
       return result || { status: 404, members: [] }
     },
   })
@@ -79,13 +79,13 @@ const GroupLayout = async ({ children, params }: Props) => {
   return (
     <HydrationBoundary state={dehydrate(query)}>
       <div className="flex h-screen md:pt-5">
-        <SideBar groupid={groupId} userid={user.id} />
+        <SideBar groupid={groupid} userid={user.id} />
         <div className="md:ml-[300px] flex flex-col flex-1 bg-[#101011] md:rounded-tl-xl overflow-y-auto border-l-[1px] border-t-[1px] border-[#28282D]">
           {/* <Navbar groupid={groupId} userid={user.id} /> */}
           {/* @ts-ignore */}
-          <GroupNavbar groupid={groupId} userid={user.id} />
+          <GroupNavbar groupid={groupid} userid={user.id} />
           {children}
-          <MobileNav groupid={groupId} />
+          <MobileNav groupid={groupid} />
         </div>
       </div>
     </HydrationBoundary>
