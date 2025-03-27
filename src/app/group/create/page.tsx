@@ -11,13 +11,14 @@ const GroupCreatePage = async ({
 }: {
   searchParams: { [affiliate: string]: string }
 }) => {
+  const params = await searchParams
   const user = await onAuthenticatedUser()
 
   if (!user || !user.id) return redirect("/sign-in")
 
-  const { affiliate: affiliateId } = await searchParams
+  const affiliateId = params?.affiliate
 
-  const affiliate = await onGetAffiliateInfo(affiliateId)
+  const affiliate = affiliateId ? await onGetAffiliateInfo(affiliateId) : null
 
   return (
     <>
@@ -29,7 +30,7 @@ const GroupCreatePage = async ({
           Free for 14 days, then $99/month. Cancel anytime. All features.
           Unlimited everything. No hidden fees.
         </p>
-        {affiliate.status === 200 && affiliate.user?.Group?.User && (
+        {affiliate?.status === 200 && affiliate?.user?.Group?.User && (
           <div className="w-full mt-5 flex justify-center items-center gap-x-2 italic text-themeTextGray text-sm">
             You were referred by
             <Avatar>
@@ -48,8 +49,8 @@ const GroupCreatePage = async ({
       </div>
       <CreateGroup
         userId={user?.id ?? ""}
-        affiliate={affiliate.status === 200}
-        stripeId={affiliate.user?.Group?.User?.stripeId ?? ""}
+        affiliate={affiliate?.status === 200}
+        stripeId={affiliate?.user?.Group?.User?.stripeId ?? ""}
         amount={99}
       />
     </>

@@ -21,18 +21,27 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Handle custom domain logic
   if (!baseHost.includes(host as string) && reqPath.includes("/group")) {
-    const response = await fetch(`${origin}/api/domain?host=${host}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
+    try {
+      const response = await fetch(`${origin}/api/domain?host=${host}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Response is not JSON")
+      }
 
-    const data = await response.json()
-    if (data.status === 200 && data) {
-      return NextResponse.rewrite(
-        new URL(reqPath, `https://${data.domain}/${reqPath}`),
-      )
+      const data = await response.json()
+      if (data.status === 200 && data) {
+        return NextResponse.rewrite(
+          new URL(reqPath, `https://${data.domain}/${reqPath}`),
+        )
+      }
+    } catch (error) {
+      console.error("Error in clerkMiddleware:", error)
+      return NextResponse.next()
     }
   }
 })
